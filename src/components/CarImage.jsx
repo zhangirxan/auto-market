@@ -1,7 +1,8 @@
-// Side-view illustration, shape depends on body type, paint on the car's color.
+import { useState } from 'react'
+
 const PAINT = {
-  White: '#f1f5f9', Black: '#1f2937', Silver: '#cbd5e1', Gray: '#6b7280',
-  Blue: '#2563eb', Red: '#dc2626', Green: '#16a34a', Beige: '#d6c3a1',
+  White: '#f1f5f9', Black: '#1f2937', Silver: '#cbd5e1', Gray: '#6b7280', Blue: '#2563eb',
+  Red: '#dc2626', Green: '#16a34a', Yellow: '#facc15', Beige: '#d6c3a1',
 }
 
 const CABINS = {
@@ -13,33 +14,41 @@ const CABINS = {
   Pickup: 'M46 42 L60 18 L106 18 L112 42 Z',
 }
 
-export default function CarImage({ body, color, className = '' }) {
+function Drawing({ body, color }) {
   const paint = PAINT[color] ?? '#94a3b8'
-  const tall = body === 'SUV' || body === 'Pickup'
-  const top = tall ? 40 : 44
+  const cabin = CABINS[body] ?? CABINS.Sedan
+  const top = body === 'SUV' || body === 'Pickup' ? 40 : 44
 
   return (
-    <div className={`car-image ${className}`}>
-      <svg viewBox="0 0 220 100" role="img" aria-label={`${color} ${body}`}>
-        <ellipse cx="110" cy="84" rx="92" ry="6" fill="rgba(0,0,0,0.12)" />
-        <path d={CABINS[body] ?? CABINS.Sedan} fill={paint} stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" />
-        <path
-          d={(CABINS[body] ?? CABINS.Sedan)}
-          fill="#dbeafe"
-          opacity="0.95"
-          transform="translate(110 40) scale(0.86) translate(-110 -40)"
-        />
-        <rect x="18" y={top} width="184" height={76 - top} rx="12" fill={paint} stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" />
-        {body === 'Pickup' && <rect x="116" y={top - 6} width="86" height="8" rx="2" fill={paint} stroke="rgba(0,0,0,0.25)" />}
-        <rect x="190" y={top + 8} width="10" height="6" rx="2" fill="#fde68a" />
-        <rect x="20" y={top + 8} width="8" height="6" rx="2" fill="#f87171" />
-        {[60, 162].map((x) => (
-          <g key={x}>
-            <circle cx={x} cy="76" r="15" fill="#111827" />
-            <circle cx={x} cy="76" r="6" fill="#9ca3af" />
-          </g>
-        ))}
-      </svg>
+    <svg viewBox="0 0 220 100" role="img" aria-label={`${color} ${body}`}>
+      <ellipse cx="110" cy="84" rx="92" ry="6" fill="rgba(0,0,0,0.12)" />
+      <path d={cabin} fill={paint} stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" />
+      <path d={cabin} fill="#dbeafe" opacity="0.95" transform="translate(110 40) scale(0.86) translate(-110 -40)" />
+      <rect x="18" y={top} width="184" height={76 - top} rx="12" fill={paint} stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" />
+      {body === 'Pickup' && <rect x="116" y={top - 6} width="86" height="8" rx="2" fill={paint} stroke="rgba(0,0,0,0.25)" />}
+      <rect x="190" y={top + 8} width="10" height="6" rx="2" fill="#fde68a" />
+      <rect x="20" y={top + 8} width="8" height="6" rx="2" fill="#f87171" />
+      {[60, 162].map((x) => (
+        <g key={x}>
+          <circle cx={x} cy="76" r="15" fill="#111827" />
+          <circle cx={x} cy="76" r="6" fill="#9ca3af" />
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+export default function CarImage({ photo, body, color, alt = '', className = '' }) {
+  const [brokenSrc, setBrokenSrc] = useState(null)
+  const showPhoto = photo && brokenSrc !== photo
+
+  return (
+    <div className={`car-image ${showPhoto ? 'has-photo' : ''} ${className}`}>
+      {showPhoto ? (
+        <img src={photo} alt={alt} loading="lazy" onError={() => setBrokenSrc(photo)} />
+      ) : (
+        <Drawing body={body} color={color} />
+      )}
     </div>
   )
 }

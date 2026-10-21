@@ -8,14 +8,11 @@ import Pagination from '../components/Pagination.jsx'
 import { EmptyState, ErrorState, Loader } from '../components/StatusView.jsx'
 
 export default function CatalogPage({ query, onQueryChange, onReset, resetVersion }) {
-  const [result, setResult] = useState(null) // last successful response
-  const [status, setStatus] = useState('loading') // loading | success | error
+  const [result, setResult] = useState(null)
+  const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
 
-  // Refetch whenever the query changes. If the query changes again before the
-  // response arrives, cleanup aborts the old request, so an old (stale) response
-  // can never overwrite the newer one.
   useEffect(() => {
     const controller = new AbortController()
     setStatus('loading')
@@ -35,7 +32,6 @@ export default function CatalogPage({ query, onQueryChange, onReset, resetVersio
     return () => controller.abort()
   }, [query, reloadKey])
 
-  // stable function, so SearchBar's effect doesn't restart on every render
   const handleSearch = useCallback((search) => onQueryChange({ search }), [onQueryChange])
 
   function handlePageChange(page) {
@@ -82,7 +78,6 @@ export default function CatalogPage({ query, onQueryChange, onReset, resetVersio
       <section className="hero">
         <h1>Find your next car</h1>
         <p>Used and new cars from private sellers across Kazakhstan.</p>
-        {/* key: "Reset filters" remounts the search bar, which clears its local text */}
         <SearchBar key={resetVersion} value={query.search} onSearch={handleSearch} />
       </section>
 

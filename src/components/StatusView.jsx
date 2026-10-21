@@ -1,5 +1,3 @@
-// Shared UI for the loading / error / empty states.
-
 export function Loader({ text = 'Loading…' }) {
   return (
     <div className="status">

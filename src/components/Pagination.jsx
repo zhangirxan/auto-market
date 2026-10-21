@@ -1,4 +1,3 @@
-// 1 … 4 5 [6] 7 8 … 10
 function pageNumbers(page, total) {
   const pages = new Set([1, total, page - 1, page, page + 1])
   const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b)

@@ -1,105 +1,105 @@
-# AutoMarket — React Midterm Project
+# AutoMarket
 
-A car marketplace SPA: browse 120+ used-car listings from cities across Kazakhstan, search,
-filter, sort, open a listing, publish your own car or remove a listing.
+React midterm project. A car marketplace where you can browse used cars from cities across
+Kazakhstan, search and filter them, open a listing, sell your own car with a photo or remove a listing.
 
-**Live demo:** https://zhangirxan.github.io/auto-market/
-
-**Repository:** https://github.com/zhangirxan/auto-market
+Live: https://zhangirxan.github.io/auto-market/
 
 ## Features
 
-- **Catalog** with search (debounced), 5 filters (make, body, fuel, max price, year), 6 sort options and pagination (12 per page)
-- **Details page** for every car with specs, description and "More from this make"
-- **Sell your car** — controlled form with validation and a live preview card
-- **Remove listing** with an inline confirmation
-- Loading, error (with retry), empty and success states everywhere
-- Responsive layout (desktop / tablet / phone)
+- Catalog: search, 5 filters (make, body, fuel, max price, year), 6 sort options, pagination (12 per page)
+- Car page with photo, specs, description and other cars of the same make
+- "Sell your car" form with validation, photo upload and live preview
+- Remove a listing (with confirmation)
+- Loading, error, empty and success states
+- Works on desktop and phone
 
-## Tech
+React 19 + Vite. Hooks: `useState`, `useEffect`, `useCallback`, `useRef`. No router library, no UI kit.
 
-React 19 + Vite. Only `useState`, `useEffect` and `useCallback`. No router library, no UI kit,
-no direct DOM manipulation.
+## Data
 
-## Data source — simulated API
+There is no backend, `src/api/carsApi.js` works like one:
 
-`src/api/carsApi.js` behaves like a REST backend:
+- every request returns a Promise and takes 350–1000 ms
+- data is kept as JSON in `localStorage` (key `automarket:cars:v3`)
+- on the first visit it is filled with **120 cars** from `src/api/seed.js` (seeded random, so the data is the same for everyone)
+- search, filters, sorting and pagination are done inside the API, the page only sends a query and gets back `{ items, total, page, totalPages }`
+- requests can be cancelled with an `AbortSignal`
+- open the app with `?fail=1` to make every request fail and see the error state:
+  https://zhangirxan.github.io/auto-market/?fail=1
 
-- every call returns a Promise with a random **350–1000 ms delay**;
-- data is stored as **JSON in `localStorage`** (`automarket:cars:v2`);
-- on first launch it is seeded with **120 listings** generated in `src/api/seed.js`
-  (seeded random, so everyone gets the same data);
-- **search, filtering, sorting and pagination are done by the API**, the UI only sends the query
-  and renders `{ items, total, page, totalPages }`;
-- ~5% of requests fail randomly. Open the app with **`?fail=1`** (https://zhangirxan.github.io/auto-market/?fail=1) to make every request fail and see the error state;
-- requests accept an `AbortSignal`, so outdated requests can be cancelled.
+Uploaded photos are resized to max 1000 px and saved as JPEG data URLs together with the listing.
+To reset the data, clear the site's localStorage.
 
-To get the initial data back, clear the site's localStorage.
+Car photos for the initial data are from [Wikimedia Commons](https://commons.wikimedia.org/) (CC licenses).
+If a photo can't load, a drawn car in the right color is shown instead.
 
-## Project structure
+## Structure
 
 ```
 src/
 ├── api/
-│   ├── seed.js            # 120 initial records + option lists
-│   └── carsApi.js         # simulated API: getCars, getCar, createCar, deleteCar
+│   ├── seed.js            120 initial cars, lists of makes / fuels / cities
+│   └── carsApi.js         getCars, getCar, createCar, deleteCar
 ├── hooks/
-│   └── useHashRoute.js    # tiny hash router (#/, #/cars/:id, #/sell)
-├── components/            # reusable UI
+│   └── useHashRoute.js    #/  #/cars/:id  #/sell
+├── components/
 │   ├── Header.jsx
-│   ├── SearchBar.jsx      # controlled input + debounce
+│   ├── SearchBar.jsx
 │   ├── FilterPanel.jsx
 │   ├── SortSelect.jsx
 │   ├── Pagination.jsx
 │   ├── CarCard.jsx
-│   ├── CarImage.jsx       # SVG car drawn by body type and color
+│   ├── CarImage.jsx       photo, or a drawing if there is none
+│   ├── PhotoPicker.jsx
 │   ├── SimilarCars.jsx
 │   ├── FormField.jsx
-│   ├── StatusView.jsx     # Loader / ErrorState / EmptyState
+│   ├── StatusView.jsx     Loader / ErrorState / EmptyState
 │   └── Toast.jsx
 ├── pages/
-│   ├── CatalogPage.jsx    # list view
-│   ├── CarDetailsPage.jsx # detail view
-│   └── SellPage.jsx       # add form
+│   ├── CatalogPage.jsx    list
+│   ├── CarDetailsPage.jsx details
+│   └── SellPage.jsx       add form
 ├── utils/format.js
 ├── App.jsx
 └── main.jsx
 ```
 
-## Where state lives and why
+## State
 
-| State | Component | Why there |
+| State | Where | Why |
 |---|---|---|
-| `query` (search, filters, sort, page) | `App` | must survive going to a car page and back — `CatalogPage` unmounts, `App` doesn't |
-| current route | `useHashRoute` in `App` | decides which page is rendered |
-| toast `notice` | `App` | set by Sell / Details pages, shown above all pages |
-| `result`, `status`, `error` of the list | `CatalogPage` | only the catalog needs them |
-| search input text | `SearchBar` | changes on every keystroke; only the debounced value goes up |
+| `query` (search, filters, sort, page) | `App` | has to survive opening a car and going back: `CatalogPage` unmounts, `App` doesn't |
+| route | `useHashRoute` in `App` | picks the page |
+| `notice` (toast) | `App` | set from Sell and Details pages, shown on top of everything |
+| list `result`, `status`, `error` | `CatalogPage` | only the catalog uses them |
+| search text | `SearchBar` | changes on every key, only the final value goes up |
 | `car`, delete confirmation | `CarDetailsPage` | belongs to one listing |
-| form fields, `saving`, `saveError` | `SellPage` | only the form needs them |
+| form fields, `saving`, `saveError` | `SellPage` | only the form uses them |
+| `busy`, `error` of the photo | `PhotoPicker` | only the picker uses them |
 
-## Effects and cleanup
+## Effects
 
 | Effect | Dependencies | Cleanup |
 |---|---|---|
-| load list (`CatalogPage`) | `[query, reloadKey]` | `AbortController.abort()` — cancels the old request when the query changes, so a slow stale response can't overwrite a newer one |
+| load list (`CatalogPage`) | `[query, reloadKey]` | abort the request, so an old slow response can't replace a newer one |
 | load car (`CarDetailsPage`) | `[id, reloadKey]` | abort |
 | similar cars (`SimilarCars`) | `[make, excludeId]` | abort |
-| search debounce (`SearchBar`) | `[text, value, onSearch]` | `clearTimeout` — every keystroke cancels the previous timer |
+| search debounce (`SearchBar`) | `[text, value, onSearch]` | `clearTimeout` |
 | hash listener (`useHashRoute`) | `[]` | `removeEventListener` |
 | toast auto-hide (`Toast`) | `[message, onClose]` | `clearTimeout` |
-| scroll to top on page change (`App`) | `[route.name, route.id]` | — |
+| scroll to top (`App`) | `[route.name, route.id]` | — |
 
-## Keys and component identity
+If the user picks two photos quickly, `PhotoPicker` only keeps the result of the last pick.
 
-- Lists use stable ids: `key={car.id}`.
-- `<CarDetailsPage key={route.id} />` — opening another car creates a fresh page, so its state
-  (loaded car, delete confirmation) is reset instead of leaking from the previous car.
-- `<SearchBar key={resetVersion} />` — "Reset filters" bumps `resetVersion`, the search bar remounts
-  and its local text is cleared.
-- `<Toast key={notice.id} />` — a new message restarts the auto-hide timer.
+## Keys
 
-## Run locally
+- lists use ids: `key={car.id}`
+- `<CarDetailsPage key={route.id} />`: another car means a fresh page, nothing is left from the previous one
+- `<SearchBar key={resetVersion} />`: "Reset filters" remounts the search bar and clears its text
+- `<Toast key={notice.id} />`: a new message restarts the timer
+
+## Run
 
 ```bash
 npm install
@@ -112,4 +112,4 @@ npm run dev
 npm run deploy
 ```
 
-Builds the app and publishes `dist` to the `gh-pages` branch (GitHub Pages).
+Builds the app and pushes `dist` to the `gh-pages` branch.

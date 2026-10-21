@@ -4,7 +4,7 @@ import { carTitle, formatMileage, formatPrice } from '../utils/format.js'
 export default function CarCard({ car }) {
   return (
     <a className="car-card" href={`#/cars/${car.id}`}>
-      <CarImage body={car.body} color={car.color} />
+      <CarImage photo={car.photo} body={car.body} color={car.color} alt={carTitle(car)} />
       <div className="car-card-body">
         <div className="car-card-title">
           <h3>{carTitle(car)}</h3>

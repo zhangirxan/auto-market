@@ -14,13 +14,10 @@ const DEFAULT_QUERY = {
 
 export default function App() {
   const route = useHashRoute()
-  // The catalog query lives here (not in CatalogPage) so it survives
-  // going to a car's page and back: CatalogPage unmounts, App does not.
   const [query, setQuery] = useState(DEFAULT_QUERY)
   const [resetVersion, setResetVersion] = useState(0)
   const [notice, setNotice] = useState(null)
 
-  // any filter change goes back to page 1, unless the patch sets the page itself
   const updateQuery = useCallback((patch) => {
     setQuery((prev) => ({ ...prev, page: 1, ...patch }))
   }, [])
@@ -32,7 +29,6 @@ export default function App() {
 
   const closeNotice = useCallback(() => setNotice(null), [])
 
-  // new page -> start at the top
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [route.name, route.id])

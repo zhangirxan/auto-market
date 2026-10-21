@@ -5,8 +5,6 @@ import SimilarCars from '../components/SimilarCars.jsx'
 import { ErrorState, Loader } from '../components/StatusView.jsx'
 import { carTitle, formatDate, formatMileage, formatPrice } from '../utils/format.js'
 
-// App renders this page with key={id}: opening another car remounts the page,
-// so the delete-confirmation state of the previous car never leaks into the next one.
 export default function CarDetailsPage({ id, onDeleted }) {
   const [car, setCar] = useState(null)
   const [status, setStatus] = useState('loading')
@@ -77,7 +75,13 @@ export default function CarDetailsPage({ id, onDeleted }) {
       <a href="#/" className="back">← Back to catalog</a>
 
       <article className="details">
-        <CarImage body={car.body} color={car.color} className="large" />
+        <CarImage
+          photo={car.photoLarge ?? car.photo}
+          body={car.body}
+          color={car.color}
+          alt={carTitle(car)}
+          className="large"
+        />
 
         <div className="details-info">
           <h1>{carTitle(car)} <span className="year">{car.year}</span></h1>

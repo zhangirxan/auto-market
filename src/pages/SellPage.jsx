@@ -3,12 +3,13 @@ import { createCar } from '../api/carsApi.js'
 import { BODIES, CITIES, COLORS, FUELS, MAKES, TRANSMISSIONS } from '../api/seed.js'
 import FormField from '../components/FormField.jsx'
 import CarImage from '../components/CarImage.jsx'
+import PhotoPicker from '../components/PhotoPicker.jsx'
 import { formatMileage, formatPrice } from '../utils/format.js'
 
 const EMPTY_FORM = {
   make: '', model: '', year: '', price: '', mileage: '', horsepower: '',
   body: 'Sedan', fuel: 'Petrol', transmission: 'Automatic', color: 'White', city: 'Almaty',
-  description: '',
+  description: '', photo: '',
 }
 
 const MAX_YEAR = new Date().getFullYear() + 1
@@ -33,16 +34,20 @@ function validate(form) {
 
 export default function SellPage({ onCreated }) {
   const [form, setForm] = useState(EMPTY_FORM)
-  const [submitted, setSubmitted] = useState(false) // show errors only after the first submit
+  const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
 
-  const errors = validate(form) // derived from form, not stored in state
+  const errors = validate(form)
   const shownErrors = submitted ? errors : {}
 
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  function handlePhoto(photo) {
+    setForm((prev) => ({ ...prev, photo }))
   }
 
   async function handleSubmit(e) {
@@ -61,6 +66,8 @@ export default function SellPage({ onCreated }) {
         price: Number(form.price),
         mileage: Number(form.mileage),
         horsepower: Number(form.horsepower),
+        photo: form.photo || null,
+        photoLarge: form.photo || null,
       })
       onCreated(car)
     } catch (err) {
@@ -94,6 +101,9 @@ export default function SellPage({ onCreated }) {
 
       <div className="sell-layout">
         <form className="sell-form" onSubmit={handleSubmit} noValidate>
+          <FormField label="Photo" wide>
+            <PhotoPicker value={form.photo} onChange={handlePhoto} />
+          </FormField>
           <FormField label="Make" error={shownErrors.make}>{select('make', MAKES, 'Choose make')}</FormField>
           <FormField label="Model" error={shownErrors.model}>{input('model', { placeholder: 'e.g. Camry' })}</FormField>
           <FormField label="Year" error={shownErrors.year}>{input('year', { type: 'number', placeholder: '2020' })}</FormField>
@@ -123,7 +133,7 @@ export default function SellPage({ onCreated }) {
         <aside className="preview">
           <p className="preview-label">Preview</p>
           <div className="car-card static">
-            <CarImage body={form.body} color={form.color} />
+            <CarImage photo={form.photo} body={form.body} color={form.color} alt="Preview" />
             <div className="car-card-body">
               <div className="car-card-title">
                 <h3>{form.make || 'Make'} {form.model || 'Model'}</h3>
